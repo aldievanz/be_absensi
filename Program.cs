@@ -65,6 +65,9 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     if (dbContext.Database.CanConnect())
     {
+        // Pastikan tabel dibuat di database baru (kalau belum ada)
+        dbContext.Database.EnsureCreated();
+
         // === AUTO UPDATE DATABASE SCHEMA ===
         try
         {
