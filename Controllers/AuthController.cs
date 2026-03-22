@@ -136,6 +136,28 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<UserDto>.Ok(MapToUserDto(user), "Profil berhasil diperbarui"));
     }
 
+    /// <summary>PUT api/auth/change-password</summary>
+    [HttpPut("change-password")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userId = GetUserIdFromToken();
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound(ApiResponse<string>.Fail("User tidak ditemukan"));
+
+        if (!BCrypt.Net.BCrypt.Verify(request.OldPassword, user.Password))
+            return BadRequest(ApiResponse<string>.Fail("Password lama salah"));
+
+        if (string.IsNullOrEmpty(request.NewPassword) || request.NewPassword.Length < 6)
+            return BadRequest(ApiResponse<string>.Fail("Password baru minimal 6 karakter"));
+
+        user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(ApiResponse<string>.Ok("Password berhasil diubah"));
+    }
+
     private static UserDto MapToUserDto(User user) => new()
     {
         Id = user.Id,
