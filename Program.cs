@@ -102,15 +102,25 @@ using (var scope = app.Services.CreateScope())
             user.Password = BCrypt.Net.BCrypt.HashPassword("password123");
         }
 
-        // --- UPDATE PENGATURAN GPS ABSENSI ---
-        var setLat = dbContext.AppSettings.FirstOrDefault(s => s.Key == "office_latitude");
-        if (setLat != null) setLat.Value = "-7.0886413436688445";
+        // --- SEED APP SETTINGS (Pengaturan Default) ---
+        var defaultSettings = new Dictionary<string, string>
+        {
+            { "jam_masuk", "08:00" },
+            { "jam_pulang", "17:00" },
+            { "office_latitude", "-7.0886413436688445" },
+            { "office_longitude", "110.28992953715782" },
+            { "office_radius", "100" },
+            { "hari_kerja", "senin,selasa,rabu,kamis,jumat" }
+        };
 
-        var setLng = dbContext.AppSettings.FirstOrDefault(s => s.Key == "office_longitude");
-        if (setLng != null) setLng.Value = "110.28992953715782";
-
-        var setRad = dbContext.AppSettings.FirstOrDefault(s => s.Key == "office_radius");
-        if (setRad != null) setRad.Value = "100";
+        foreach (var ds in defaultSettings)
+        {
+            var setting = dbContext.AppSettings.FirstOrDefault(s => s.Key == ds.Key);
+            if (setting == null)
+            {
+                dbContext.AppSettings.Add(new SmartAttendanceApi.Models.AppSetting { Key = ds.Key, Value = ds.Value });
+            }
+        }
 
         dbContext.SaveChanges();
     }
