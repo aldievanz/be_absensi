@@ -9,7 +9,7 @@ namespace SmartAttendanceApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "admin")]
+[Authorize] // Semua user boleh baca setting
 public class SettingsController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -29,6 +29,7 @@ public class SettingsController : ControllerBase
 
     /// <summary>PUT api/settings</summary>
     [HttpPut]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Update([FromBody] Dictionary<string, string> settings)
     {
         foreach (var kvp in settings)
@@ -56,6 +57,7 @@ public class SettingsController : ControllerBase
 
     /// <summary>DELETE api/settings/reset-data</summary>
     [HttpDelete("reset-data")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> ResetData()
     {
         // Use raw SQL to swiftly clear tables

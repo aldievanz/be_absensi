@@ -131,6 +131,11 @@ public class DashboardUserDto
     public int TotalTelat { get; set; }
     public int TotalIzin { get; set; }
     public int TotalAlpha { get; set; }
+    public List<AttendanceDto> RecentHistory { get; set; } = new();
+    public int AttendanceRate { get; set; }
+    public int OnTimeRate { get; set; }
+    public string WorkStartTime { get; set; } = "09:00";
+    public string WorkEndTime { get; set; } = "18:00";
 }
 
 public class DashboardAdminDto
@@ -142,6 +147,8 @@ public class DashboardAdminDto
     public int IzinHariIni { get; set; }
     public int PendingLeave { get; set; }
     public List<AttendanceDto> RecentAttendances { get; set; } = new();
+    public string WorkStartTime { get; set; } = "09:00";
+    public string WorkEndTime { get; set; } = "18:00";
 }
 
 // API Response wrapper

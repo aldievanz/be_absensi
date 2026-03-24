@@ -157,12 +157,28 @@ public class AttendanceController : ControllerBase
         var y = year ?? DateTime.Now.Year;
 
         var role = User.FindFirstValue(ClaimTypes.Role);
-        var finalUserId = (targetUserId.HasValue && role == "admin") ? targetUserId.Value : loggedInUserId;
 
-        var attendances = await _context.Attendances
+        IQueryable<Attendance> query = _context.Attendances
             .Include(a => a.User)
-            .Where(a => a.UserId == finalUserId && a.Date.Month == m && a.Date.Year == y)
+            .Where(a => a.Date.Month == m && a.Date.Year == y);
+
+        if (role == "admin")
+        {
+            // Admin: if targetUserId specified, filter by that user; otherwise show ALL
+            if (targetUserId.HasValue)
+            {
+                query = query.Where(a => a.UserId == targetUserId.Value);
+            }
+        }
+        else
+        {
+            // Regular user: only their own data
+            query = query.Where(a => a.UserId == loggedInUserId);
+        }
+
+        var attendances = await query
             .OrderByDescending(a => a.Date)
+            .ThenByDescending(a => a.CheckIn)
             .ToListAsync();
 
         return Ok(ApiResponse<List<AttendanceDto>>.Ok(
