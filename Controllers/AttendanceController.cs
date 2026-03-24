@@ -54,13 +54,20 @@ public class AttendanceController : ControllerBase
         var now = TimeOnly.FromDateTime(DateTime.Now);
         var status = now > jamMasuk ? "telat" : "hadir";
 
-        // Validasi radius lokasi (opsional)
-        if (request.Latitude.HasValue && request.Longitude.HasValue)
+        // Validasi radius lokasi wajib menyala
+        if (!request.Latitude.HasValue || !request.Longitude.HasValue)
         {
-            var isInRadius = await ValidateLocation(request.Latitude.Value, request.Longitude.Value);
-            if (!isInRadius)
-                return BadRequest(ApiResponse<string>.Fail("Lokasi kamu di luar radius kantor"));
+            return BadRequest(ApiResponse<string>.Fail("Lokasi tidak terdeteksi. Wajib mengaktifkan GPS."));
         }
+
+        if (string.IsNullOrEmpty(request.Photo))
+        {
+            return BadRequest(ApiResponse<string>.Fail("Wajib jepret foto presensi sebelum check-in!"));
+        }
+
+        var isInRadius = await ValidateLocation(request.Latitude.Value, request.Longitude.Value);
+        if (!isInRadius)
+            return BadRequest(ApiResponse<string>.Fail("Lokasi kamu di luar radius kantor"));
 
         if (existing != null)
         {
@@ -114,6 +121,21 @@ public class AttendanceController : ControllerBase
 
         if (attendance.CheckOut != null)
             return BadRequest(ApiResponse<string>.Fail("Kamu sudah check-out hari ini"));
+
+        // Validasi radius lokasi wajib menyala
+        if (!request.Latitude.HasValue || !request.Longitude.HasValue)
+        {
+            return BadRequest(ApiResponse<string>.Fail("Lokasi tidak terdeteksi. Wajib mengaktifkan GPS."));
+        }
+
+        if (string.IsNullOrEmpty(request.Photo))
+        {
+            return BadRequest(ApiResponse<string>.Fail("Wajib jepret foto presensi sebelum check-out!"));
+        }
+
+        var isInRadius = await ValidateLocation(request.Latitude.Value, request.Longitude.Value);
+        if (!isInRadius)
+            return BadRequest(ApiResponse<string>.Fail("Lokasi kamu di luar radius kantor"));
 
         var now = TimeOnly.FromDateTime(DateTime.Now);
         attendance.CheckOut = now;
