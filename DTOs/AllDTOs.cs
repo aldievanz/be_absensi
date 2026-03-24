@@ -136,6 +136,7 @@ public class DashboardUserDto
     public int OnTimeRate { get; set; }
     public string WorkStartTime { get; set; } = "09:00";
     public string WorkEndTime { get; set; } = "18:00";
+    public string HariKerja { get; set; } = "senin,selasa,rabu,kamis,jumat";
 }
 
 public class DashboardAdminDto
@@ -149,6 +150,7 @@ public class DashboardAdminDto
     public List<AttendanceDto> RecentAttendances { get; set; } = new();
     public string WorkStartTime { get; set; } = "09:00";
     public string WorkEndTime { get; set; } = "18:00";
+    public string HariKerja { get; set; } = "senin,selasa,rabu,kamis,jumat";
 }
 
 // API Response wrapper

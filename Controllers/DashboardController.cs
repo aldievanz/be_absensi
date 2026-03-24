@@ -61,9 +61,11 @@ public class DashboardController : ControllerBase
         var settingsList = await _context.AppSettings.ToListAsync();
         var jamMasukSetting = settingsList.FirstOrDefault(s => s.Key == "jam_masuk" || s.Key == "WorkStartTime");
         var jamPulangSetting = settingsList.FirstOrDefault(s => s.Key == "jam_pulang" || s.Key == "WorkEndTime");
+        var hariKerjaSetting = settingsList.FirstOrDefault(s => s.Key == "hari_kerja");
         
         var workStartTime = jamMasukSetting?.Value ?? "09:00";
         var workEndTime = jamPulangSetting?.Value ?? "18:00";
+        var hariKerja = hariKerjaSetting?.Value ?? "senin,selasa,rabu,kamis,jumat";
         
         if (TimeOnly.TryParse(workStartTime, out var parsedStart)) workStartTime = parsedStart.ToString(@"HH\:mm");
         if (TimeOnly.TryParse(workEndTime, out var parsedEnd)) workEndTime = parsedEnd.ToString(@"HH\:mm");
@@ -109,7 +111,8 @@ public class DashboardController : ControllerBase
             AttendanceRate = attendanceRate,
             OnTimeRate = onTimeRate,
             WorkStartTime = workStartTime,
-            WorkEndTime = workEndTime
+            WorkEndTime = workEndTime,
+            HariKerja = hariKerja
         };
 
         return Ok(ApiResponse<DashboardUserDto>.Ok(dashboard));
@@ -158,9 +161,11 @@ public class DashboardController : ControllerBase
         var settingsList = await _context.AppSettings.ToListAsync();
         var jamMasukSetting = settingsList.FirstOrDefault(s => s.Key == "jam_masuk" || s.Key == "WorkStartTime");
         var jamPulangSetting = settingsList.FirstOrDefault(s => s.Key == "jam_pulang" || s.Key == "WorkEndTime");
+        var hariKerjaSetting = settingsList.FirstOrDefault(s => s.Key == "hari_kerja");
         
         var workStartTime = jamMasukSetting?.Value ?? "09:00";
         var workEndTime = jamPulangSetting?.Value ?? "18:00";
+        var hariKerja = hariKerjaSetting?.Value ?? "senin,selasa,rabu,kamis,jumat";
         
         if (TimeOnly.TryParse(workStartTime, out var parsedStart)) workStartTime = parsedStart.ToString(@"HH\:mm");
         if (TimeOnly.TryParse(workEndTime, out var parsedEnd)) workEndTime = parsedEnd.ToString(@"HH\:mm");
@@ -175,7 +180,8 @@ public class DashboardController : ControllerBase
             PendingLeave = pendingLeave,
             RecentAttendances = recentAttendances,
             WorkStartTime = workStartTime,
-            WorkEndTime = workEndTime
+            WorkEndTime = workEndTime,
+            HariKerja = hariKerja
         };
 
         return Ok(ApiResponse<DashboardAdminDto>.Ok(dashboard));
