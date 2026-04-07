@@ -25,7 +25,7 @@ public class AttendanceController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> ResetDev()
     {
-        var today = DateOnly.FromDateTime(DateTime.Now);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
         var attendances = await _context.Attendances.Where(a => a.Date == today).ToListAsync();
         _context.Attendances.RemoveRange(attendances);
         await _context.SaveChangesAsync();
@@ -37,7 +37,7 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> CheckIn([FromBody] CheckInRequest request)
     {
         var userId = GetUserId();
-        var today = DateOnly.FromDateTime(DateTime.Now);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
 
         // Cek apakah sudah absen hari ini
         var existing = await _context.Attendances
@@ -51,7 +51,7 @@ public class AttendanceController : ControllerBase
             .FirstOrDefaultAsync(s => s.Key == "jam_masuk");
         var jamMasuk = TimeOnly.Parse(jamMasukSetting?.Value ?? "08:00");
 
-        var now = TimeOnly.FromDateTime(DateTime.Now);
+        var now = TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
         var status = now > jamMasuk ? "telat" : "hadir";
 
         // Validasi radius lokasi wajib menyala
@@ -111,7 +111,7 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> CheckOut([FromBody] CheckOutRequest request)
     {
         var userId = GetUserId();
-        var today = DateOnly.FromDateTime(DateTime.Now);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
 
         var attendance = await _context.Attendances
             .FirstOrDefaultAsync(a => a.UserId == userId && a.Date == today);
@@ -137,7 +137,7 @@ public class AttendanceController : ControllerBase
         if (!isInRadius)
             return BadRequest(ApiResponse<string>.Fail("Lokasi kamu di luar radius kantor"));
 
-        var now = TimeOnly.FromDateTime(DateTime.Now);
+        var now = TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
         attendance.CheckOut = now;
         attendance.LocationOut = request.LocationName;
         attendance.LatitudeOut = request.Latitude;
@@ -158,7 +158,7 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> GetToday()
     {
         var userId = GetUserId();
-        var today = DateOnly.FromDateTime(DateTime.Now);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
 
         var attendance = await _context.Attendances
             .Include(a => a.User)
@@ -175,8 +175,8 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> GetHistory([FromQuery] int? month, [FromQuery] int? year, [FromQuery] int? targetUserId)
     {
         var loggedInUserId = GetUserId();
-        var m = month ?? DateTime.Now.Month;
-        var y = year ?? DateTime.Now.Year;
+        var m = month ?? DateTime.UtcNow.AddHours(7).Month;
+        var y = year ?? DateTime.UtcNow.AddHours(7).Year;
 
         var role = User.FindFirstValue(ClaimTypes.Role);
 
@@ -216,7 +216,7 @@ public class AttendanceController : ControllerBase
         [FromQuery] int pageSize = 20)
     {
         var targetDate = string.IsNullOrEmpty(date)
-            ? DateOnly.FromDateTime(DateTime.Now)
+            ? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7))
             : DateOnly.Parse(date);
 
         var query = _context.Attendances
@@ -246,8 +246,8 @@ public class AttendanceController : ControllerBase
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetReport([FromQuery] int? month, [FromQuery] int? year)
     {
-        var m = month ?? DateTime.Now.Month;
-        var y = year ?? DateTime.Now.Year;
+        var m = month ?? DateTime.UtcNow.AddHours(7).Month;
+        var y = year ?? DateTime.UtcNow.AddHours(7).Year;
 
         var attendances = await _context.Attendances
             .Include(a => a.User)

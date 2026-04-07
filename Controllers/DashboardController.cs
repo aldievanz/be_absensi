@@ -24,9 +24,9 @@ public class DashboardController : ControllerBase
     public async Task<IActionResult> GetUserDashboard()
     {
         var userId = GetUserId();
-        var today = DateOnly.FromDateTime(DateTime.Now);
-        var currentMonth = DateTime.Now.Month;
-        var currentYear = DateTime.Now.Year;
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+        var currentMonth = DateTime.UtcNow.AddHours(7).Month;
+        var currentYear = DateTime.UtcNow.AddHours(7).Year;
 
         // Get today's attendance
         var todayAttendance = await _context.Attendances
@@ -78,7 +78,7 @@ public class DashboardController : ControllerBase
 
         // Calculate working days in current month (excluding weekends)
         var workingDays = 0;
-        for (int day = 1; day <= Math.Min(DateTime.Now.Day, DateTime.DaysInMonth(currentYear, currentMonth)); day++)
+        for (int day = 1; day <= Math.Min(DateTime.UtcNow.AddHours(7).Day, DateTime.DaysInMonth(currentYear, currentMonth)); day++)
         {
             var date = new DateTime(currentYear, currentMonth, day);
             if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
@@ -123,7 +123,7 @@ public class DashboardController : ControllerBase
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetAdminDashboard()
     {
-        var today = DateOnly.FromDateTime(DateTime.Now);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
 
         var totalKaryawan = await _context.Users.CountAsync(u => u.Role == "user" && u.IsActive);
 
