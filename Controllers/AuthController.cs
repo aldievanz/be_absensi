@@ -168,6 +168,8 @@ public class AuthController : ControllerBase
         Department = user.Department,
         Phone = user.Phone,
         PhotoProfile = user.PhotoProfile,
-        IsActive = user.IsActive
+        IsActive = user.IsActive,
+        HasFaceRegistered = !string.IsNullOrEmpty(user.FaceEmbedding),
+        FaceRegisteredAt = user.FaceRegisteredAt?.ToString("yyyy-MM-dd HH:mm:ss")
     };
 }

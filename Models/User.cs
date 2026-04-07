@@ -52,6 +52,12 @@ public class User
     [Column("photo_profile", TypeName = "longtext")]
     public string? PhotoProfile { get; set; }
 
+    [Column("face_embedding", TypeName = "longtext")]
+    public string? FaceEmbedding { get; set; } // JSON array of float (128-d face descriptor)
+
+    [Column("face_registered_at")]
+    public DateTime? FaceRegisteredAt { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

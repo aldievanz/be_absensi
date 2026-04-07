@@ -82,6 +82,18 @@ using (var scope = app.Services.CreateScope())
         }
         catch { /* Ignore */ }
 
+        // Face Recognition columns
+        try
+        {
+            dbContext.Database.ExecuteSqlRaw("ALTER TABLE users ADD COLUMN face_embedding LONGTEXT;");
+        }
+        catch { /* Ignore if column exists */ }
+        try
+        {
+            dbContext.Database.ExecuteSqlRaw("ALTER TABLE users ADD COLUMN face_registered_at DATETIME(6);");
+        }
+        catch { /* Ignore if column exists */ }
+
         var admin = dbContext.Users.FirstOrDefault(u => u.Email == "admin@example.com");
         if (admin == null)
         {

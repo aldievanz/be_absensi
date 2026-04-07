@@ -51,6 +51,27 @@ public class UserDto
     public string? Phone { get; set; }
     public string? PhotoProfile { get; set; }
     public bool IsActive { get; set; }
+    public bool HasFaceRegistered { get; set; }
+    public string? FaceRegisteredAt { get; set; }
+}
+
+// Face Recognition DTOs
+public class FaceRegisterRequest
+{
+    public List<float> Descriptor { get; set; } = new();
+}
+
+public class FaceVerifyRequest
+{
+    public List<float> Descriptor { get; set; } = new();
+}
+
+public class FaceVerifyResponse
+{
+    public bool IsMatch { get; set; }
+    public double Distance { get; set; }
+    public double Threshold { get; set; }
+    public string Message { get; set; } = string.Empty;
 }
 
 // Attendance DTOs
