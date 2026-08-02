@@ -15,17 +15,16 @@ public class FaceController : ControllerBase
 {
     private readonly AppDbContext _context;
 
-    // Threshold Euclidean Distance:
     // < 0.30 → sangat identik
-    // < 0.38 → match (orang yang sama) ✅
-    // > 0.38 → beda orang (strict)
-    private const double MATCH_THRESHOLD = 0.38;
+    // < 0.45 → match (orang yang sama) ✅
+    // > 0.45 → beda orang (strict)
+    private const double MATCH_THRESHOLD = 0.45;
 
     // Cosine Similarity Threshold (0-1, semakin tinggi semakin mirip)
     // > 0.80 → sangat mirip
-    // > 0.75 → match ✅
-    // < 0.75 → beda orang
-    private const double COSINE_THRESHOLD = 0.75;
+    // > 0.70 → match ✅
+    // < 0.70 → beda orang
+    private const double COSINE_THRESHOLD = 0.70;
 
     public FaceController(AppDbContext context)
     {
@@ -98,8 +97,8 @@ public class FaceController : ControllerBase
         var distance = CalculateEuclideanDistance(request.Descriptor, storedDescriptor);
         var cosineSim = CalculateCosineSimilarity(request.Descriptor, storedDescriptor);
 
-        // Harus lolos KEDUA pengecekan untuk dianggap match
-        var isMatch = distance < MATCH_THRESHOLD && cosineSim > COSINE_THRESHOLD;
+        // Cukup lolos SALAH SATU pengecekan untuk dianggap match (lebih toleran)
+        var isMatch = distance < MATCH_THRESHOLD || cosineSim > COSINE_THRESHOLD;
 
         var response = new FaceVerifyResponse
         {
