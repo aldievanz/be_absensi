@@ -195,3 +195,108 @@ public class PaginatedResponse<T>
     public int Page { get; set; }
     public int PageSize { get; set; }
 }
+
+// ─── Punctuality Rate DTOs ──────────────────────────────────────────────────
+
+/// <summary>
+/// Rentang tanggal periode (from - to)
+/// </summary>
+public class DateRangeDto
+{
+    public string From { get; set; } = string.Empty;
+    public string To { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Response untuk endpoint GET /dashboard/punctuality
+/// Format sesuai kontrak prompt:
+/// {
+///   "period": "week",
+///   "range": { "from": "2026-10-05", "to": "2026-10-11" },
+///   "workDays": 5, "onTime": 4, "late": 1, "absent": 0, "excused": 0,
+///   "punctualityPercent": 80.0, "previousPercent": 100.0, "trend": "down"
+/// }
+/// </summary>
+public class PunctualityDto
+{
+    /// <summary>week | month</summary>
+    public string Period { get; set; } = string.Empty;
+
+    /// <summary>Rentang tanggal periode { from, to }</summary>
+    public DateRangeDto Range { get; set; } = new();
+
+    /// <summary>Total hari kerja efektif yang sudah berlalu</summary>
+    public int WorkDays { get; set; }
+
+    /// <summary>Hari dengan status "hadir" (tepat waktu)</summary>
+    public int OnTime { get; set; }
+
+    /// <summary>Hari dengan status "telat"</summary>
+    public int Late { get; set; }
+
+    /// <summary>Hari tidak hadir tanpa keterangan (alpha)</summary>
+    public int Absent { get; set; }
+
+    /// <summary>Hari izin/sakit/cuti approved (dikecualikan dari penyebut)</summary>
+    public int Excused { get; set; }
+
+    /// <summary>Persentase ketepatan waktu, dibulatkan 1 desimal. 0 jika penyebut = 0.</summary>
+    public double PunctualityPercent { get; set; }
+
+    /// <summary>Persentase periode sebelumnya untuk perbandingan tren</summary>
+    public double PreviousPercent { get; set; }
+
+    /// <summary>up | down | same</summary>
+    public string Trend { get; set; } = "same";
+
+    // Kemudahan akses backward compatibility
+    public string RangeFrom { get => Range.From; set => Range.From = value; }
+    public string RangeTo { get => Range.To; set => Range.To = value; }
+}
+
+/// <summary>
+/// Ringkasan punctuality satu karyawan (untuk tabel admin: karyawan terendah)
+/// </summary>
+public class PunctualityUserSummaryDto
+{
+    public int UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string? Department { get; set; }
+    public string? PhotoProfile { get; set; }
+    public int WorkDays { get; set; }
+    public int OnTime { get; set; }
+    public int Late { get; set; }
+    public int Absent { get; set; }
+    public int Excused { get; set; }
+    public double PunctualityPercent { get; set; }
+}
+
+/// <summary>
+/// Response admin: ringkasan seluruh karyawan + statistik agregat
+/// </summary>
+public class PunctualityAdminDto
+{
+    public string Period { get; set; } = string.Empty;
+    public DateRangeDto Range { get; set; } = new();
+
+    /// <summary>Total hari kerja efektif periode</summary>
+    public int WorkDays { get; set; }
+    public int OnTime { get; set; }
+    public int Late { get; set; }
+    public int Absent { get; set; }
+    public int Excused { get; set; }
+
+    /// <summary>Rata-rata punctuality semua karyawan aktif</summary>
+    public double PunctualityPercent { get; set; }
+    public double PreviousPercent { get; set; }
+    public double AveragePunctualityPercent { get => PunctualityPercent; set => PunctualityPercent = value; }
+    public double PreviousAveragePercent { get => PreviousPercent; set => PreviousPercent = value; }
+    public string Trend { get; set; } = "same";
+
+    public string RangeFrom { get => Range.From; set => Range.From = value; }
+    public string RangeTo { get => Range.To; set => Range.To = value; }
+
+    /// <summary>Daftar karyawan diurutkan punctuality terendah (ascending)</summary>
+    public List<PunctualityUserSummaryDto> Users { get; set; } = new();
+}
+

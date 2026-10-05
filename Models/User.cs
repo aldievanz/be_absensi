@@ -49,10 +49,10 @@ public class User
     [Column("is_active")]
     public bool IsActive { get; set; } = true;
 
-    [Column("photo_profile", TypeName = "longtext")]
+    [Column("photo_profile")]
     public string? PhotoProfile { get; set; }
 
-    [Column("face_embedding", TypeName = "longtext")]
+    [Column("face_embedding")]
     public string? FaceEmbedding { get; set; } // JSON array of float (128-d face descriptor)
 
     [Column("face_registered_at")]

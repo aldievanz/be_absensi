@@ -1,28 +1,37 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.IdentityModel.Tokens;
 using SmartAttendanceApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// === Database (MySQL) ===
-// Prioritas: Environment Variable MYSQL_URL (Railway) > appsettings.json
-var mysqlUrl = Environment.GetEnvironmentVariable("MYSQL_URL");
+// === Database (PostgreSQL / Supabase) ===
+var envDbUrl = Environment.GetEnvironmentVariable("DATABASE_URL") ?? Environment.GetEnvironmentVariable("POSTGRES_URL");
 string connectionString;
-if (!string.IsNullOrEmpty(mysqlUrl))
+
+if (!string.IsNullOrEmpty(envDbUrl))
 {
-    // Parse MYSQL_URL format: mysql://user:password@host:port/database
-    var uri = new Uri(mysqlUrl);
-    var userInfo = uri.UserInfo.Split(':');
-    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};User={userInfo[0]};Password={userInfo[1]};";
+    connectionString = ParsePostgresUrl(envDbUrl);
 }
 else
 {
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+    var configConn = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
+    if (configConn.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) || 
+        configConn.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+    {
+        connectionString = ParsePostgresUrl(configConn);
+    }
+    else
+    {
+        connectionString = configConn;
+    }
 }
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseNpgsql(connectionString));
 
 // === JWT Authentication ===
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -65,34 +74,16 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     if (dbContext.Database.CanConnect())
     {
-        // Pastikan tabel dibuat di database baru (kalau belum ada)
-        dbContext.Database.EnsureCreated();
-
-        // === AUTO UPDATE DATABASE SCHEMA ===
+        // Pastikan tabel aplikasi dibuat di database baru (kalau belum ada)
         try
         {
-            dbContext.Database.ExecuteSqlRaw("ALTER TABLE users ADD COLUMN photo_profile LONGTEXT;");
+            var databaseCreator = (RelationalDatabaseCreator)dbContext.Database.GetService<IDatabaseCreator>();
+            databaseCreator.CreateTables();
         }
-        catch { /* Ignore if column exists */ }
-        
-        try
+        catch
         {
-            dbContext.Database.ExecuteSqlRaw("ALTER TABLE attendances MODIFY photo_in LONGTEXT;");
-            dbContext.Database.ExecuteSqlRaw("ALTER TABLE attendances MODIFY photo_out LONGTEXT;");
+            // Abaikan jika tabel sudah terbuat sebelumnya
         }
-        catch { /* Ignore */ }
-
-        // Face Recognition columns
-        try
-        {
-            dbContext.Database.ExecuteSqlRaw("ALTER TABLE users ADD COLUMN face_embedding LONGTEXT;");
-        }
-        catch { /* Ignore if column exists */ }
-        try
-        {
-            dbContext.Database.ExecuteSqlRaw("ALTER TABLE users ADD COLUMN face_registered_at DATETIME(6);");
-        }
-        catch { /* Ignore if column exists */ }
 
         var admin = dbContext.Users.FirstOrDefault(u => u.Email == "admin@example.com");
         if (admin == null)
@@ -150,3 +141,24 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "5210";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();
+
+// === Helper function to parse Postgres URL/URI ===
+static string ParsePostgresUrl(string url)
+{
+    try
+    {
+        var uri = new Uri(url);
+        var userInfo = uri.UserInfo.Split(':');
+        var username = Uri.UnescapeDataString(userInfo[0]);
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+        var port = uri.Port > 0 ? uri.Port : 5432;
+        var database = uri.AbsolutePath.TrimStart('/');
+        if (string.IsNullOrEmpty(database)) database = "postgres";
+        
+        return $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};Pooling=true;SSL Mode=Require;Trust Server Certificate=true;";
+    }
+    catch
+    {
+        return url;
+    }
+}

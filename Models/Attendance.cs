@@ -50,10 +50,10 @@ public class Attendance
     [Column("longitude_out")]
     public double? LongitudeOut { get; set; }
 
-    [Column("photo_in", TypeName = "longtext")]
+    [Column("photo_in")]
     public string? PhotoIn { get; set; }
 
-    [Column("photo_out", TypeName = "longtext")]
+    [Column("photo_out")]
     public string? PhotoOut { get; set; }
 
     [StringLength(500)]

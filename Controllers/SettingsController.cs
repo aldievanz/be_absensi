@@ -60,9 +60,15 @@ public class SettingsController : ControllerBase
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> ResetData()
     {
-        // Use raw SQL to swiftly clear tables
-        await _context.Database.ExecuteSqlRawAsync("DELETE FROM attendances; ALTER TABLE attendances AUTO_INCREMENT = 1;");
-        await _context.Database.ExecuteSqlRawAsync("DELETE FROM leave_requests; ALTER TABLE leave_requests AUTO_INCREMENT = 1;");
+        // Clear tables via EF Core (works on Postgres and MySQL)
+        await _context.Attendances.ExecuteDeleteAsync();
+        await _context.LeaveRequests.ExecuteDeleteAsync();
+        try
+        {
+            await _context.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS attendances_id_seq RESTART WITH 1;");
+            await _context.Database.ExecuteSqlRawAsync("ALTER SEQUENCE IF EXISTS leave_requests_id_seq RESTART WITH 1;");
+        }
+        catch { /* Ignore if sequence name differs */ }
         return Ok(ApiResponse<string>.Ok("cleared", "Semua data Riwayat Absensi & Izin berhasil direset bersih (0 data)!"));
     }
 }

@@ -22,10 +22,11 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
         });
 
-        // Attendance: 1 user = 1 record per hari
+        // Attendance: 1 user = 1 record per hari + index Date untuk agregasi cepat
         modelBuilder.Entity<Attendance>(entity =>
         {
             entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();
+            entity.HasIndex(e => e.Date);
             entity.HasOne(e => e.User)
                   .WithMany(u => u.Attendances)
                   .HasForeignKey(e => e.UserId)
